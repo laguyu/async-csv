@@ -1,0 +1,70 @@
+{
+    "openapi": "3.0.0",
+    "info": {
+        "title": "API de Procesamiento Asíncrono SOLID",
+        "description": "Sube catálogos masivos en segundo plano utilizando Laravel Queues y Docker.",
+        "version": "1.0.0"
+    },
+    "servers": [
+        {
+            "url": "/",
+            "description": "Servidor de Producción Dinámico"
+        }
+    ],
+    "paths": {
+        "/api/products/import": {
+            "post": {
+                "tags": ["Importación"],
+                "summary": "Subir un archivo CSV de productos",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "type": "object",
+                                "required": ["csv_file"],
+                                "properties": {
+                                    "csv_file": {
+                                        "type": "string",
+                                        "format": "binary",
+                                        "description": "Archivo CSV a procesar"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "202": {
+                        "description": "Archivo aceptado para procesamiento en segundo plano."
+                    }
+                }
+            }
+        },
+        "/api/products/import/{id}": {
+            "get": {
+                "tags": ["Importación"],
+                "summary": "Consultar el estado del progreso de la importación",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID de la importación generado al subir el CSV",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Estado del proceso actual."
+                    },
+                    "404": {
+                        "description": "Importación no encontrada."
+                    }
+                }
+            }
+        }
+    }
+}
