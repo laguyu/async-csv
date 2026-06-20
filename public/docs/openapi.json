@@ -5,10 +5,10 @@
         "description": "Sube catálogos masivos en segundo plano utilizando Laravel Queues y Docker.",
         "version": "1.0.0"
     },
-    "servers": [
+     "servers": [
         {
-            "url": "/",
-            "description": "Servidor de Producción Dinámico"
+            "url": "https://hf.space",
+            "description": "Servidor de Producción Directo"
         }
     ],
     "paths": {
