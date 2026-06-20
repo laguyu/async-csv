@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Documentación de la API</title>
-    <!-- CSS oficial de Swagger optimizado -->
-    <link rel="stylesheet" href="https://jsdelivr.net">
+    <!-- CDN de Alta Disponibilidad de Cloudflare (Súper estable y rápido) -->
+    <link rel="stylesheet" href="https://cloudflare.com">
     <style>
         html { box-sizing: border-box; overflow: -merge-images; }
         *, *:before, *:after { box-sizing: inherit; }
@@ -15,13 +15,21 @@
 <body>
     <div id="swagger-ui"></div>
 
-    <!-- Scripts oficiales con soporte "crossorigin" para proxies y contenedores seguros -->
-    <script src="https://jsdelivr.net" crossorigin></script>
-    <script src="https://jsdelivr.net" crossorigin></script>
+    <!-- Scripts oficiales de respaldo global -->
+    <script src="https://cloudflare.com" crossorigin="anonymous"></script>
+    <script src="https://cloudflare.com" crossorigin="anonymous"></script>
 
     <script>
         window.onload = () => {
-            // El bundle cargará de forma transparente al usar jsDelivr
+            if (typeof SwaggerUIBundle === 'undefined') {
+                document.getElementById('swagger-ui').innerHTML =
+                    "<div style='padding:20px; text-align:center; font-family:sans-serif;'>" +
+                    "<h3>⚠️ Error de conexión de red</h3>" +
+                    "<p>No se pudieron cargar los scripts de Swagger desde el servidor global. Por favor, refresca la página.</p>" +
+                    "</div>";
+                return;
+            }
+
             window.ui = SwaggerUIBundle({
                 url: '/docs/openapi.json',
                 dom_id: '#swagger-ui',
