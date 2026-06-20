@@ -1,7 +1,6 @@
 FROM php:8.3-fpm-alpine
 
-# CORRECCIÓN: Cambiado default-mysql-client por mariadb-client
-RUN apk add --no-cache nginx supervisor mariadb-client bash \
+RUN apk add --no-cache nginx supervisor mariadb-client bash ca-certificates \
     && docker-php-ext-install pdo pdo_mysql pcntl
 
 # Descargar e instalar la versión estable más reciente de Composer en el contenedor
