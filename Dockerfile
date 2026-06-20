@@ -15,6 +15,9 @@ COPY . .
 # Instalar todas las dependencias de Laravel y Swagger optimizadas para producción
 RUN composer install --no-dev --optimize-autoloader
 
+# Copia la configuración de tamaño de archivos al motor interno de PHP
+COPY ./docker/uploads.ini /usr/local/etc/php/conf.d/uploads.ini
+
 # Configurar permisos obligatorios para que Laravel pueda escribir la caché, logs y subidas temporales
 RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
 
