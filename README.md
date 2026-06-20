@@ -1,3 +1,13 @@
+---
+title: Async CSV API
+emoji: 🚀
+colorFrom: indigo
+colorTo: pink
+sdk: docker
+app_port: 7860
+pinned: false
+---
+
 # 🚀 API de Procesamiento Asíncrono de Catálogos (CSV) con SOLID & Docker
 
 Esta es una API de alto rendimiento desarrollada en **Laravel** diseñada para resolver un problema crítico en sistemas empresariales y de comercio electrónico: la importación masiva de productos mediante archivos CSV de gran tamaño sin saturar la memoria del servidor ni bloquear la experiencia del usuario.
@@ -43,7 +53,7 @@ El proyecto fue estructurado bajo los principios de diseño de software **SOLID*
 ### 1. Instalación Inicial
 ```bash
 git clone https://github.com
-cd Nombre_del_archivo
+cd TU_REPOSITORIO
 composer install
 cp .env.example .env
 php artisan key:generate
@@ -77,11 +87,11 @@ El proyecto está diseñado para funcionar de forma autónoma en **Hugging Face 
 ### Pasos para Desplegar:
 1. Crea un clúster gratuito en [TiDB Cloud (Serverless)](https://pingcap.com).
 2. Ve a la consola de TiDB, genera una nueva contraseña de conexión para **MySQL** y copia los datos correspondientes (`Host`, `Database`, `User`, `Port` y `Password`).
-3. Crea un **Space** nuevo en [Hugging Face](https://huggingface.co), selecciona **Docker** como SDK y elige la plantilla **Blank** (Pública).
+3. Crea un **Space** nuevo en [Hugging Face](https://huggingface.co/), selecciona **Docker** como SDK y elige la plantilla **Blank** (Pública).
 4. En la pestaña **Settings** de tu Space, ve a **Variables and Secrets** y añade las variables de producción utilizando los datos de TiDB:
    * `APP_ENV` = `production` | `APP_DEBUG` = `false` | `APP_KEY` = `base64:...`
    * `DB_CONNECTION` = `mysql`
-   * `DB_HOST` = *(Host de TiDB Cloud)* | `DB_PORT` = `4000` (Puerto estándar de TiDB)
+   * `DB_HOST` = *(Host de TiDB Cloud)* | `DB_PORT` = `4000`
    * `DB_DATABASE` = *(Tu base de datos)* | `DB_USERNAME` = *(Tu usuario de TiDB)* | `DB_PASSWORD` = *(Tu contraseña)*
    * `QUEUE_CONNECTION` = `database`
 5. Sube tu código al repositorio del Space. ¡Hugging Face compilará y activará la API automáticamente!
@@ -93,7 +103,7 @@ El proyecto está diseñado para funcionar de forma autónoma en **Hugging Face 
 Cualquier reclutador o cliente puede probar la API en producción ingresando directamente a la interfaz gráfica interactiva de Swagger añadida al despliegue:
 
 ```text
-https://huggingface.cospaces/TU_USUARIO/NOMBRE_DE_TU_SPACE/api/documentation
+https://huggingface.co
 ```
 
 ### Flujo de Prueba:
