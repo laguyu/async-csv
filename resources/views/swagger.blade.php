@@ -23,7 +23,7 @@
         window.onload = () => {
             // El bundle cargará de forma transparente al usar jsDelivr
             window.ui = SwaggerUIBundle({
-                url: '/docs/openapi.json', // Ruta interna a tu archivo estático
+                url: 'https://hf.space',
                 dom_id: '#swagger-ui',
                 presets: [
                     SwaggerUIBundle.presets.apis,
