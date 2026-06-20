@@ -6,6 +6,14 @@ use App\Http\Requests\ImportCsvRequest;
 use App\Models\CsvImport;
 use App\Jobs\ProcessProductCsv;
 
+/**
+ * @OA\Info(
+ *      version="1.0.0",
+ *      title="API de Procesamiento Asíncrono SOLID",
+ *      description="Sube catálogos masivos en segundo plano utilizando Laravel Queues y Docker."
+ * )
+ */
+
 class ProductImportController extends Controller
 {
     public function import(ImportCsvRequest $request)
