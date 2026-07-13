@@ -1,8 +1,18 @@
+---
+title: Async CSV API
+emoji: 🚀
+colorFrom: indigo
+colorTo: pink
+sdk: docker
+app_port: 7860
+pinned: false
+---
+
 # 🚀 API de Procesamiento Asíncrono de Catálogos (CSV) con SOLID & Docker
 
 Esta es una API de alto rendimiento desarrollada en **Laravel** diseñada para resolver un problema crítico en sistemas empresariales y de comercio electrónico: la importación masiva de productos mediante archivos CSV de gran tamaño sin saturar la memoria del servidor ni bloquear la experiencia del usuario.
 
-El proyecto está dockerizado y preparado para correr de forma continua y 100% gratuita en **Hugging Face Spaces**, utilizando **TiDB Serverless (MySQL)** como base de datos externa y **Swagger** para pruebas interactivas en tiempo real.
+El proyecto está dockerizado y estructurado bajo una arquitectura desacoplada pura, corriendo de forma continua y 100% gratuita en la nube de **Hugging Face Spaces**, utilizando **TiDB Serverless (MySQL)** como base de datos externa distribuida y **Swagger UI** nativo para pruebas interactivas.
 
 ---
 
@@ -12,26 +22,48 @@ El proyecto está dockerizado y preparado para correr de forma continua y 100% g
 2. **Optimización de Consultas (Chunking & Upsert):** En lugar de hacer miles de inserciones individuales a la base de datos (cuello de botella), el sistema agrupa los productos en bloques de 500 (*Chunks*) y los guarda en una sola consulta masiva utilizando la sentencia `upsert`. Si el producto es nuevo lo crea; si el SKU existe, actualiza los datos.
 3. **Procesamiento Asíncrono (Colas de Trabajo):** El servidor web recibe el archivo, responde de inmediato al cliente con un código `202 Accepted` (en milisegundos) y delega la tarea pesada a un proceso independiente que corre en segundo plano (*Background Worker*).
 4. **Notificación por Consulta (Polling):** Para entornos de alta disponibilidad y serverless, el cliente puede consultar un endpoint específico utilizando el ID de importación para ver el porcentaje de avance matemático (`0%` a `100%`) en tiempo real.
+5. **Infraestructura Escalable (Tuning de Servidores):** Se configuraron los límites de carga de red tanto en el servidor web **Nginx** (`client_max_body_size`) como en el motor **PHP** (`upload_max_filesize`), permitiendo transferencias pesadas de archivos masivos de datos sin bloqueos de infraestructura.
 
 ---
 
-## 🏗️ Arquitectura y Principios SOLID Aplicados
+## 🏗️ Arquitectura y Principios SOLID Aplicados (Desacoplamiento Puro)
 
-El proyecto fue estructurado bajo los principios de diseño de software **SOLID** para garantizar un código mantenible, desacoplado y escalable:
+El proyecto fue estructurado bajo los principios de diseño de software **SOLID** de manera estricta para garantizar un código libre de dependencias rígidas de terceros:
 
-* **S - Single Responsibility (Responsabilidad Única):** Cada clase hace una sola cosa. El *Form Request* valida el archivo físico, el *Controlador* solo recibe la petición HTTP, el *Job* maneja la infraestructura de la cola, el *Servicio* ejecuta la lógica de negocio y el *Modelo* define la accesibilidad de datos.
-* **O - Open/Closed (Abierto/Cerrado):** El sistema está abierto a expandirse para nuevos formatos de archivos (como XML o JSON) mediante la implementación de contratos, pero cerrado a modificaciones en sus componentes Core.
+* **S - Single Responsibility (Responsabilidad Única):** Tus controladores de Laravel están 100% limpios y enfocados únicamente en su responsabilidad HTTP (recibir parámetros y despachar tareas). No contienen código basura de anotaciones de documentación externas.
+* **Desacoplamiento de Infraestructura:** La documentación se maneja de forma independiente a través de un contrato estático **OpenAPI (JSON)** ubicado en la capa pública. Si el día de mañana decides migrar la documentación a herramientas como Postman, Redoc o Stoplight, tu código backend de PHP no sufre ninguna modificación.
 * **D - Dependency Inversion (Inversión de Dependencias):** El Job no depende de una clase de código rígida, sino de una **Interfaz (Contrato)**. El contenedor de Laravel inyecta el servicio de forma dinámica a través del `AppServiceProvider`.
 
 ---
 
 ## 🛠️ Tecnologías Utilizadas
 
-* **Backend:** PHP 8.3 / Laravel 11+
+* **Backend Core:** PHP 8.3 / Laravel 11+
 * **Patrones:** Service Pattern & Contracts (Interfaces)
-* **Documentación:** Swagger (L5-Swagger con OpenAPI 3.0)
-* **Contenedores & DevOps:** Docker / Supervisor / Nginx
-* **Base de Datos:** MySQL (TiDB Serverless Cloud)
+* **Documentación:** Swagger UI (Integrado nativamente vía CDN en Blade + OpenAPI 3.0 Especificación Estática)
+* **Contenedores & DevOps:** Docker / Supervisor / Nginx / GitHub Actions (CI/CD)
+* **Base de Datos:** MySQL (TiDB Serverless Cloud con Conexión Segura SSL)
+
+---
+
+## 📋 Estructura Obligatoria del Archivo CSV
+
+Para realizar pruebas con éxito, el archivo de importación debe ser un archivo de texto plano separado por comas (`.csv`), y la primera línea **debe contener exactamente los siguientes nombres de columna en minúsculas**:
+
+```text
+sku,name,description,price,stock
+```
+
+### Ejemplo de contenido válido para pruebas:
+```text
+sku,name,description,price,stock
+PROD-001,Laptop Gamer ASUS,Procesador Ryzen 7 y 16GB RAM,1250.00,15
+PROD-002,Teclado Mecanico RGB,Teclado con switches red silenciosos,85.50,50
+PROD-003,Mouse Inalambrico,Mouse ergonomico para oficina,29.99,100
+PROD-004,Monitor 4K 27 pulgadas,Monitor IPS ideal para diseno,399.00,8
+PROD-005,Audifonos HyperX,,45.00,45
+```
+*Nota: La descripción es opcional (puede ir vacía como en el PROD-005). Los precios deben utilizar punto decimal (`.`) y no comas.*
 
 ---
 
@@ -43,7 +75,7 @@ El proyecto fue estructurado bajo los principios de diseño de software **SOLID*
 ### 1. Instalación Inicial
 ```bash
 git clone https://github.com
-cd Nombre_del_archivo
+cd TU_REPOSITORIO
 composer install
 cp .env.example .env
 php artisan key:generate
@@ -66,36 +98,23 @@ Abre **dos terminales independientes**:
 
 ## 🐳 Despliegue en la Nube con Docker & Hugging Face Spaces
 
-El proyecto está diseñado para funcionar de forma autónoma en **Hugging Face Spaces**. Al subir el código, la plataforma lee el `Dockerfile` e instala todo el entorno de producción. Cada vez que el contenedor se enciende, ejecuta un script (`docker-entrypoint.sh`) que corre las migraciones en TiDB Cloud y autogenera la documentación de Swagger.
+El proyecto funciona de forma autónoma en la infraestructura de **Hugging Face Spaces**. Al subir el código mediante la automatización de **GitHub Actions**, la plataforma lee el `Dockerfile` e instala todo el entorno de producción.
 
 ### Estructura de Archivos de Infraestructura Incluidos:
-* **`Dockerfile`**: Configura una imagen Linux Alpine con PHP-FPM, Nginx, Supervisor y las extensiones necesarias para MySQL (`pdo_mysql`, `pcntl`).
-* **`docker/nginx.conf`**: Configura el servidor web en el puerto `7860` requerido por Hugging Face.
-* **`docker/supervisord.conf`**: El guardián de procesos que mantiene encendidos simultáneamente Nginx, PHP y el comando de colas de Laravel.
-* **`docker/docker-entrypoint.sh`**: Script de arranque automatizado en la nube.
-
-### Pasos para Desplegar:
-1. Crea un clúster gratuito en [TiDB Cloud (Serverless)](https://pingcap.com).
-2. Ve a la consola de TiDB, genera una nueva contraseña de conexión para **MySQL** y copia los datos correspondientes (`Host`, `Database`, `User`, `Port` y `Password`).
-3. Crea un **Space** nuevo en [Hugging Face](https://huggingface.co), selecciona **Docker** como SDK y elige la plantilla **Blank** (Pública).
-4. En la pestaña **Settings** de tu Space, ve a **Variables and Secrets** y añade las variables de producción utilizando los datos de TiDB:
-   * `APP_ENV` = `production` | `APP_DEBUG` = `false` | `APP_KEY` = `base64:...`
-   * `DB_CONNECTION` = `mysql`
-   * `DB_HOST` = *(Host de TiDB Cloud)* | `DB_PORT` = `4000` (Puerto estándar de TiDB)
-   * `DB_DATABASE` = *(Tu base de datos)* | `DB_USERNAME` = *(Tu usuario de TiDB)* | `DB_PASSWORD` = *(Tu contraseña)*
-   * `QUEUE_CONNECTION` = `database`
-5. Sube tu código al repositorio del Space. ¡Hugging Face compilará y activará la API automáticamente!
+* **`Dockerfile`**: Configura una imagen Linux Alpine con PHP-FPM, Nginx, Supervisor y las extensiones necesarias para MySQL (`pdo_mysql`, `pcntl`). Instala los certificados `ca-certificates` del sistema operativo para permitir el túnel seguro hacia la base de datos distribuida de TiDB Cloud.
+* **`docker/nginx.conf`**: Configura el servidor web ampliando el parámetro `client_max_body_size 50M` para admitir cargas pesadas.
+* **`docker/uploads.ini`**: Inyecta configuraciones al núcleo de PHP (`upload_max_filesize` y `post_max_size` a 50M) alineando el backend con los límites del servidor.
+* **`docker/supervisord.conf`**: El orquestador que mantiene encendidos simultáneamente Nginx, PHP y el comando de colas de Laravel de manera ininterrumpida las 24 horas del día.
+* **`docker/docker-entrypoint.sh`**: Script de arranque automatizado en la nube que ejecuta de forma segura las migraciones pendientes en TiDB Cloud usando SSL.
 
 ---
 
-## 🧪 Pruebas Interactivas con Swagger (Endpoints)
+## 🧪 Pruebas Interactivas en la Nube (Endpoints)
 
-Cualquier reclutador o cliente puede probar la API en producción ingresando directamente a la interfaz gráfica interactiva de Swagger añadida al despliegue:
+Puedes probar la API en producción e interactuar con los endpoints ingresando directamente a la interfaz gráfica independiente a pantalla completa:
 
-```text
-https://huggingface.cospaces/TU_USUARIO/NOMBRE_DE_TU_SPACE/api/documentation
-```
+👉 <a href="https://wilanmonlo-async-csv-api.hf.space" target="_blank"><b>Probar API en Vivo (Swagger UI)</b></a>
 
-### Flujo de Prueba:
-1. **`POST /api/products/import` (Subir Catálogo):** Haz clic en *Try it out*, selecciona el archivo `productos.csv` de prueba y presiona *Execute*. El servidor responderá de inmediato con código `202 Accepted` y un JSON con el identificador (ej: `"import_id": 1`).
-2. **`GET /api/products/import/{id}` (Monitorear Progreso):** Coloca el ID generado en este endpoint y presiona *Execute*. Si consultas continuamente, verás en tiempo real cómo el estado cambia de `pending` a `processing` mientras el contador de filas (`processed_rows`) y el porcentaje de progreso (`progress`) aumentan en bloques de 500 en 500 hasta marcar `100% completed`.
+### Flujo de Prueba de la API:
+1. **`POST /api/products/import` (Subir Catálogo):** Haz clic en *Try it out*, selecciona tu archivo `.csv` estructurado (siguiendo la guía de este README) y presiona *Execute*. El servidor responderá de inmediato con código `202 Accepted` y un JSON con el identificador de tu proceso (ej: `"import_id": 1`).
+2. **`GET /api/products/import/{id}` (Monitorear Progreso):** Coloca el ID generado en este endpoint y presiona *Execute*. Si consultas continuamente, verás en tiempo real cómo el estado cambia de `pending` a `processing` mientras el contador de filas (`processed_rows`) y el porcentaje de progreso matemático (`progress`) aumentan en bloques de 500 en 500 hasta marcar `100% completed`.

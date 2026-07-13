@@ -1,0 +1,19 @@
+name: Sincronizar con Hugging Face Hub
+
+on:
+  push:
+    branches: [main] # Se ejecutará cada vez que subas cambios a la rama main
+
+jobs:
+  sync-to-hub:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          lfs: true
+
+      - name: Enviar código a Hugging Face Spaces
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        run: git push -f https://Wilanmonlo:$HF_TOKEN@huggingface.co/spaces/Wilanmonlo/async-csv-api main
